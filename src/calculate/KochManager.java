@@ -11,14 +11,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * The KochManager is an observer of the KochFractal class.
  * It handles consuming and passing on changes to the application's KochFractal.
  */
-public class KochManager implements Observer {
+public class KochManager{
     /**
      * The JavaFX application that the KochFractal will be drawn on.
      */
@@ -41,35 +43,27 @@ public class KochManager implements Observer {
     private List<Edge> edges = new ArrayList<>();
 
     /**
-     * A counter to check how many threads are done calculating edges
-     */
-    private int counter;
-
-    /**
      * The class's constructor.
      * @param application The application that the KochFractal will be drawn on.
      */
     public KochManager(JSF31KochFractalFX application) {
         this.application = application;
         this.koch = new KochFractal();
-        koch.addObserver(this);
-        //todo hier een threadpool aanmaken (fixed)
-
-
-        pool = new Executors.newFixedThreadPool(3);
+       // koch.addObserver(this);
+        pool = Executors.newFixedThreadPool(4);
 
     }
 
-    /**
-     * Fires when the observed KochFractal is updated.
-     * Draws the edges of the KochFractal.
-     * @param o The Koch Fractal.
-     * @param arg The edge that was updated.
-     */
-    @Override
-    public void update(Observable o, Object arg) {
-
-    }
+//    /**
+//     * Fires when the observed KochFractal is updated.
+//     * Draws the edges of the KochFractal.
+//     * @param o The Koch Fractal.
+//     * @param arg The edge that was updated.
+//     */
+//    @Override
+//    public void update(Observable o, Object arg) {
+//
+//    }
 
     /**
      * Changes the level of the KochFractal.
@@ -80,14 +74,68 @@ public class KochManager implements Observer {
         TimeStamp ts = new TimeStamp();
         ts.setBegin("Start generating edges");
 
-        //pool.execute();
 
-//        new Thread(new LeftEdge(this,nxt)).start();
-//        new Thread(new RightEdge(this,nxt)).start();
-//        new Thread(new BottomEdge(this,nxt)).start();
 
-        ts.setEnd("Done generating edges");
-        application.setTextCalc(ts.toString());
+        CallableEdges bottom = new CallableEdges(koch, 1);
+        CallableEdges left = new CallableEdges(koch, 2);
+        CallableEdges right = new CallableEdges(koch, 3);
+
+        Future<List<Edge>> f1 = pool.submit(bottom);
+        Future<List<Edge>> f2 = pool.submit(left);
+        Future<List<Edge>> f3 = pool.submit(right);
+
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try
+                {
+                    edges.addAll(f1.get());
+                    edges.addAll(f2.get());
+                    edges.addAll(f3.get());
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+                application.requestDrawEdges();
+            }
+        };
+        pool.execute(runnable);
+        edges.clear();
+
+//        BottomEdge bottom = new BottomEdge(this, nxt);
+//        LeftEdge left = new LeftEdge(this, nxt);
+//        RightEdge right = new RightEdge(this, nxt);
+//
+//        Future<List<Edge>> f1 = pool.submit(bottom);
+//        Future<List<Edge>> f2 = pool.submit(left);
+//        Future<List<Edge>> f3 = pool.submit(right);
+//
+//
+//        Runnable runnable = new Runnable() {
+//            @Override
+//            public void run() {
+//
+//                try{
+//                    edges.addAll(f1.get());
+//                    edges.addAll(f2.get());
+//                    edges.addAll(f3.get());
+//                }
+//                catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                } catch (ExecutionException e) {
+//                    e.printStackTrace();
+//                }
+//                application.requestDrawEdges();
+//            }
+//
+//        };
+//        pool.execute(runnable);
+//
+//
+       ts.setEnd("Done generating edges");
+       application.setTextCalc(ts.toString());
     }
 
     /**
@@ -144,16 +192,16 @@ public class KochManager implements Observer {
         //System.out.println(edges.size());
     }
 
-    /**
-     *  finished.
-     *  Method called after all the threads are done calculating the edges
-     *  synchronized to make sure the method called after ALL the threads are done.
-     */
-    public synchronized void finished(){
-        counter++;
-        if(counter == 3){
-            application.requestDrawEdges();
-            counter = 0;
-        }
-    }
+//    /**
+//     *  finished.
+//     *  Method called after all the threads are done calculating the edges
+//     *  synchronized to make sure the method called after ALL the threads are done.
+//     */
+//    public synchronized void finished(){
+//        counter++;
+//        if(counter == 3){
+//            application.requestDrawEdges();
+//            counter = 0;
+//        }
+//    }
 }

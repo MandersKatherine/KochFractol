@@ -5,10 +5,11 @@ import calculate.KochFractal;
 import calculate.KochManager;
 
 import java.util.Observer;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class LeftEdge implements Runnable, Observer {
+public class LeftEdge implements Callable, Observer {
 
     private KochFractal koch;
     private KochManager kochManager;
@@ -27,21 +28,21 @@ public class LeftEdge implements Runnable, Observer {
         this.kochManager = kochManager;
     }
 
-    /**
-     *  Run.
-     *  The method that is called after the thread has been started
-     *
-     */
-    @Override
-    public void run() {
-        koch.generateLeftEdge();
-        kochManager.finished();
-        try{
-            Thread.sleep(10000);
-        }catch (InterruptedException ex){
-            Logger.getLogger(LeftEdge.class.getName()).log(Level.SEVERE,null,ex);
-        }
-    }
+//    /**
+//     *  Run.
+//     *  The method that is called after the thread has been started
+//     *
+//     */
+//    @Override
+//    public void run() {
+//        koch.generateLeftEdge();
+//        kochManager.finished();
+//        try{
+//            Thread.sleep(10000);
+//        }catch (InterruptedException ex){
+//            Logger.getLogger(LeftEdge.class.getName()).log(Level.SEVERE,null,ex);
+//        }
+//    }
 
     /**
      * Update.
@@ -56,5 +57,10 @@ public class LeftEdge implements Runnable, Observer {
         kochManager.addEdge(edge);
         //System.out.println("Left");
 
+    }
+
+    @Override
+    public Object call() throws Exception {
+        return null;
     }
 }

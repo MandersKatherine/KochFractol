@@ -4,6 +4,7 @@ import calculate.Edge;
 import calculate.KochFractal;
 import calculate.KochManager;
 
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.Callable;
@@ -14,6 +15,7 @@ public class BottomEdge implements Callable, Observer {
 
     private KochFractal koch;
     private KochManager kochManager;
+
 
     /**
      * BottomEdge.
@@ -60,12 +62,19 @@ public class BottomEdge implements Callable, Observer {
 
     @Override
     public Object call() throws Exception {
+
+        koch.generateBottomEdge();
+
+
         return null;
+        //todo een eigen lijst maken binnen de callable
+        // todo die lijst vullen met de update
+        // todo wanneer je klaar bent met een return de lijst terug geven
+        // todo rekening houden met de het annuleren
+
+
     }
 
 
-    //todo een eigen lijst maken binnen de callable
-    // todo die lijst vullen met de update
-    // todo wanneer je klaar bent met een return de lijst terug geven
-    // rekening houden met de het annuleren
+
 }
